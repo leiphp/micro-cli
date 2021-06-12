@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"log"
 	"micro-cli/Services"
 	"micro-cli/libs"
 	"net/http"
@@ -24,9 +25,13 @@ func NewUserController() *UserController {
 func (this *UserController) Detail(c *gin.Context){
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
-	c.JSON(http.StatusOK, libs.ReturnJson(200, "", id))
-}
 
-func (this *UserController) Health(c *gin.Context){
-	c.JSON(http.StatusOK, libs.ReturnJson(200, "", "ok"))
+	result, err := this.UserService.GetUserInfo(int64(id))
+	log.Printf("[用户控制器-userInfo返回数据]-[%s]", libs.StructToJson(result))
+	if err != nil {
+		c.JSON(http.StatusNotFound, libs.ReturnJson(404, "", nil))
+		return
+	}
+	c.JSON(http.StatusOK, libs.ReturnJson(200, "", result))
+
 }
