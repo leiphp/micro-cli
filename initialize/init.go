@@ -9,8 +9,11 @@ import (
 	"github.com/asim/go-micro/v3/client"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+	"io"
+	"micro-cli/libs"
 	"os"
 	"runtime"
 	"strings"
@@ -19,11 +22,30 @@ import (
 
 var (
 	MsqlDb       *gorm.DB             //数据库客户端
-	//IrisLog         *golog.Logger     //全局log变量
+	RusLog         *logrus.Logger     //全局log变量
 	Config          *viper.Viper      //全局配置
 	GrpcConn        *grpc.ClientConn          //grpc对象 用于grpc调用
 	Client 			client.Client
 )
+
+type lineHook struct {
+	Field  string
+	// skip为遍历调用栈开始的索引位置
+	Skip   int
+	levels []logrus.Level
+
+}
+
+func (hook lineHook) Fire(entry *logrus.Entry) error {
+	entry.Data["SERVER_IP"] = libs.ReturnCurrentIp()
+	entry.Data["SERVER_NAME"] = Config.GetString("Nacos.ServiceName")
+	//entry.Data[hook.Field] = findCaller(hook.Skip)
+	return nil
+}
+
+func (hook lineHook) Levels() []logrus.Level {
+	return logrus.AllLevels
+}
 
 //	提供系统初始化，全局变量
 func Init(config *viper.Viper) {
@@ -42,26 +64,11 @@ func Init(config *viper.Viper) {
 		panic(err)
 	}
 
-	////	系统日志配置
-	//App = iris.New()
-	//IrisLog = App.Logger()
-	//App.Use(logger.New(returnLogConfig()))
-	////	终端和日志文件同时输出
-	//IrisLog.SetOutput(io.MultiWriter(newLogFile(), os.Stdout))
-	//IrisLog.SetPrefix("[SERVER_IP:" + libs.ReturnCurrentIp() + "]" + " [SERVER_NAME:" + config.GetString("Nacos.ServiceName") + "] ")
-	//IrisLog.Handle(func(value *golog.Log) (handled bool) {
-	//	caller := findCaller(6) //中间件，日志中记录打印日志的文件及函数名称
-	//	value.Message = fmt.Sprintf("[%s] ", caller) + value.Message
-	//
-	//	log := "[SERVER_IP:" + libs.ReturnCurrentIp() + "]" + " [SERVER_NAME:" + config.GetString("Nacos.ServiceName") + "] [" + time.Now().Format("2006-01-02 15:04:05") + "] " + value.Message
-	//
-	//	//判断有没有ServeHTTP
-	//	if strings.Contains(log, "ServeHTTP") {
-	//		//如果包含就退出
-	//		return false
-	//	}
-	//	return false
-	//})
+	//	系统日志配置
+	RusLog = logrus.New()
+	RusLog.AddHook(&lineHook{})
+	//	终端和日志文件同时输出
+	RusLog.Out= io.MultiWriter(newLogFile(), os.Stdout)
 
 	//Client
 	Client = micro.NewService().Client()

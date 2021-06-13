@@ -39,6 +39,7 @@ func (this *GoodsController) Detail(c *gin.Context){
 
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
+	initialize.RusLog.Infof("[用户控制器-http请求数据]-[%d]", id)
 	log.Printf("[用户控制器-http请求数据query]-[%d]", id)
 	log.Printf("[用户控制器-http请求数据json]-[%d]", goods.Id)
 
