@@ -3,6 +3,7 @@ module micro-cli
 go 1.14
 
 require (
+	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
 	github.com/asim/go-micro/plugins/registry/etcd/v3 v3.0.0-20210611085744-b892efa25f04
 	github.com/asim/go-micro/plugins/server/http/v3 v3.0.0-20210611085744-b892efa25f04
 	github.com/asim/go-micro/v3 v3.5.1

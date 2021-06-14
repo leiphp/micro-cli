@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	httpServer "github.com/asim/go-micro/plugins/server/http/v3"
 	"github.com/asim/go-micro/v3"
+	"github.com/asim/go-micro/v3/client"
+	"github.com/asim/go-micro/v3/metadata"
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/server"
 	"micro-cli/configs"
@@ -11,7 +15,21 @@ import (
 	"micro-cli/routers"
 )
 
+//装饰器拦截
+type logWrapper struct {
+	client.Client
+}
 
+//装饰器执行
+func(this *logWrapper) Call(ctx context.Context, req client.Request, rsp interface{}, opts ...client.CallOption) error{
+	md, _ := metadata.FromContext(ctx)
+	fmt.Printf("[Log Wrapper] ctx: %v service: %s method: %s\n", md, req.Service(), req.Endpoint())
+	return this.Client.Call(ctx,req,rsp)
+}
+
+func NewLogWrapper(c client.Client) client.Client {
+	return &logWrapper{c}
+}
 
 
 func main(){
@@ -38,6 +56,7 @@ func main(){
 	srv.Handle(hd)
 
 	service := micro.NewService(
+		micro.WrapClient(NewLogWrapper),
 		micro.Server(srv),
 		micro.Registry(etcdReg),
 	)
