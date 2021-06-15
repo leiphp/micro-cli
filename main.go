@@ -13,6 +13,7 @@ import (
 	"micro-cli/configs"
 	"micro-cli/initialize"
 	"micro-cli/routers"
+	"micro-cli/wrappers"
 )
 
 //装饰器拦截
@@ -59,6 +60,7 @@ func main(){
 		micro.WrapClient(NewLogWrapper),
 		micro.Server(srv),
 		micro.Registry(etcdReg),
+		micro.WrapClient(wrappers.NewProdsWrapper),
 	)
 
 	//调grpc服务
