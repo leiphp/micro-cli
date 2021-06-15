@@ -3,6 +3,7 @@ package routers
 import (
 	"github.com/gin-gonic/gin"
 	"micro-cli/web/controllers"
+	"micro-cli/web/middlewares"
 	"net/http"
 )
 
@@ -24,6 +25,8 @@ func initControllerStruct() {
 func NewGinRouter() *gin.Engine {
 	ginRouter := gin.Default()
 	//ginRouter.Use(InitMiddleware(testService),ErrorMiddleware())
+	// 注册中间件
+	ginRouter.Use(middlewares.MiddleWare())
 	//初始化控制器结构体
 	initControllerStruct()
 	//grpc路由
